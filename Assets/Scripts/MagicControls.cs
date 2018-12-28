@@ -9,64 +9,56 @@ public class MagicControls : MonoBehaviour
     public GameObject[] magicPrefabs;
     public Transform magicSpawn;
 
-    int magicPrefabNum = 1;
+    // The array size of 4 comes from the number of spells the user can use
+    int[] magicPrefabNum = new int[4];
 
-    public Text cooldownText;
+    public Text[] cooldownText;
 
     float magicSpeed = 15f;
     float magicSize = .75f;
     int magicCount = 3;
 
-    bool canFire = true;
+    bool[] canFire = new bool[4];
     float magicCooldownTime = 1;
-    float timeStamp;
+    float[] timeStamp = new float[4];
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    void Start()
     {
-        timeStamp = Time.time;
+        for (int i = 0; i < 4; i++)
+        {
+            timeStamp[i] = Time.time;
+        }
 	}
 	
 	// Update is called once per frame
 	void Update ()
     {
+        if (cooldownText.Length > 4)
+        {
+            Debug.LogError("cooldownText size is greater than 4!!!");
+        }
+
         DisplayCooldown();
         CanUseMagic();
 
-        if (Input.GetButtonDown("Fire1") && Time.timeScale != 0)
+        if (Input.GetButtonDown("MainFire") && Time.timeScale != 0)
         {
-            //Fire();
-            Fire2();
+            Fire(0);
+        }
+        else if (Input.GetButtonDown("MoveFire") && Time.timeScale != 0)
+        {
+            Fire(1);
         }
 	}
 
-    void Fire()
+    void Fire(int indexOfSpell)
     {
-        //...setting shoot direction
-        Vector2 shootDirection;
-        Vector2 target = Camera.main.ScreenToWorldPoint(new Vector2(Input.mousePosition.x, Input.mousePosition.y));
-        Vector2 myPos = new Vector2(magicSpawn.position.x, magicSpawn.position.y);
-        shootDirection = target - myPos;
-        shootDirection.Normalize();
-
-        // Create the Bullet from the Bullet Prefab
-        GameObject magic = Instantiate(magicPrefabs[magicPrefabNum], magicSpawn.position, Quaternion.Euler(new Vector3(0, 0, 0)));
-
-        // Change bullet size
-        magic.transform.localScale = new Vector3(magicSize, magicSize, magicSize);
-
-        // Add velocity to the bullet
-        magic.GetComponent<Rigidbody2D>().velocity = shootDirection * magicSpeed;
-
-        // Destroy the bullet after 2 seconds
-        Destroy(magic, 2.0f);
-    }
-
-    void Fire2()
-    {
-        if (canFire == true)
+        // indexOfSpell is the number in the array of player spells 
+        // 0 = base spell (mouse1), 1 = movement spell (space), 2 = misc spell 1 (q), 3 = misc spell 2 (e / mouse2)
+        if (canFire[indexOfSpell] == true)
         {
-            BeginCooldown();
+            BeginCooldown(indexOfSpell);
 
             //...setting shoot direction
             Vector2 target = Camera.main.ScreenToWorldPoint(new Vector2(Input.mousePosition.x, Input.mousePosition.y));
@@ -100,7 +92,7 @@ public class MagicControls : MonoBehaviour
 
 
                     // Create the Bullet from the Bullet Prefab
-                    magicBullets.Add(Instantiate(magicPrefabs[magicPrefabNum], magicSpawn.position, Quaternion.Euler(new Vector3(0, 0, 0))));
+                    magicBullets.Add(Instantiate(magicPrefabs[magicPrefabNum[indexOfSpell]], magicSpawn.position, Quaternion.Euler(new Vector3(0, 0, 0))));
 
                     // Change bullet size
                     magicBullets[i].transform.localScale = new Vector3(magicSize, magicSize, magicSize);
@@ -131,7 +123,7 @@ public class MagicControls : MonoBehaviour
                     //shootDirections[i].Normalize();
 
                     // Create the Bullet from the Bullet Prefab
-                    magicBullets.Add(Instantiate(magicPrefabs[magicPrefabNum], magicSpawn.position, Quaternion.Euler(new Vector3(0, 0, 0))));
+                    magicBullets.Add(Instantiate(magicPrefabs[magicPrefabNum[indexOfSpell]], magicSpawn.position, Quaternion.Euler(new Vector3(0, 0, 0))));
 
                     // Change bullet size
                     magicBullets[i].transform.localScale = new Vector3(magicSize, magicSize, magicSize);
@@ -167,16 +159,19 @@ public class MagicControls : MonoBehaviour
 
     void CanUseMagic()
     {
-        if (Mathf.CeilToInt(magicCooldownTime - (Time.time - (timeStamp - magicCooldownTime))) <= 0)
+        for (int i = 0; i < 4; i++)
         {
-            
-            canFire = true;
+            if (magicCooldownTime - (Time.time - (timeStamp[i] - magicCooldownTime)) <= 0)
+            {
+                canFire[i] = true;
+            }
         }
     }
 
     public void ChangeMagicSpeed(float speed)
     {
         magicSpeed = speed;
+        // modify speed based on type, size, and extra speed (maybe more)
     }
 
     public void ChangeMagicSize(float size)
@@ -191,27 +186,31 @@ public class MagicControls : MonoBehaviour
 
     public void DisplayCooldown()
     {
-        if (canFire == false)
+        for (int i = 0; i < cooldownText.Length; i++)
         {
-            int cooldown = Mathf.CeilToInt(magicCooldownTime - (Time.time - (timeStamp - magicCooldownTime)));
-
-             cooldownText.text = cooldown.ToString();
-        }
-        else if (canFire == true)
-        {
-            cooldownText.enabled = false;
+            if (canFire[i] == false)
+            {
+                float cooldown = Mathf.Round((magicCooldownTime - (Time.time - (timeStamp[i] - magicCooldownTime))) * 10f) / 10f;
+                Debug.Log(i);
+                cooldownText[i].text = cooldown.ToString();
+            }
+            else if (canFire[i] == true)
+            {
+                cooldownText[i].enabled = false;
+            }
         }
     }
 
-    public void BeginCooldown()
+    public void BeginCooldown(int index)
     {
-        timeStamp = Time.time + magicCooldownTime;
-        cooldownText.enabled = true;
-        canFire = false;
+        timeStamp[index] = Time.time + magicCooldownTime;
+        cooldownText[index].enabled = true;
+        canFire[index] = false;
     }
 
     public void ChangeMagicTypeDEBUG(int index)
     {
-        magicPrefabNum = index;
+        // this needs to change!
+        magicPrefabNum[0] = index;
     }
 }

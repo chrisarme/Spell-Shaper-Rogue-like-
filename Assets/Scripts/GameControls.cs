@@ -63,12 +63,12 @@ public class GameControls : MonoBehaviour {
 
         //Then new stuff
         //Player.instance
-        //foreach (GameObject obj in pauseObjects)
-        //{
-        //    if (obj.name == "SpeedSlider")
-        //    {
-        //        magicControls.ChangeMagicSpeed(obj.GetComponent<Sl>)
-        //    }
-        //}
+        foreach (GameObject obj in pauseObjects)
+        {
+            if (obj.name == "SizeSlider")
+            {
+                //magicControls.ChangeMagicSpeed(obj.GetComponent<Slider>);
+            }
+        }
     }
 }

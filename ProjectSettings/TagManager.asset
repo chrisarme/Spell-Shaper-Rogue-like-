@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - PauseMenu
+  - ModMenu
+  - ModSlots
   layers:
   - Default
   - TransparentFX
